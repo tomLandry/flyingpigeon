@@ -5,8 +5,12 @@ os.chdir('/tmp')
 
 resource = []
 for year in range(2008, 2010):
-  url = 'http://www.esrl.noaa.gov/psd/thredds/fileServer/Datasets/ncep.reanalysis.dailyavgs/surface/slp.%s.nc' % year
-  resource.append(wget.download(url))
+  f = 'slp.%s.nc' % year
+  if not os.path.exists(f):
+    url = 'http://www.esrl.noaa.gov/psd/thredds/fileServer/Datasets/ncep.reanalysis.dailyavgs/surface/%s' % f
+    resource.append(wget.download(url))
+  else:
+    resource.append(f)  
 
 from ocgis import RequestDataset, OcgOperations
 rd = RequestDataset(resource[0])
