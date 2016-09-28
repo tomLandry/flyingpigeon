@@ -71,23 +71,19 @@ class AnalogsviewerProcess(WPSProcess):
         from tempfile import mkstemp
         from flyingpigeon.config import www_url
         
-<<<<<<< HEAD
+
         from flyingpigeon.analogs import get_configfile , config_edits, refomat_analogs , get_viewer
-=======
-        from flyingpigeon.analogs import get_configfile, config_edits, format_analog_output
->>>>>>> ecc818eb6caabc6f05f12a59797807d1e47f7651
+
 
         #my_css_url = www_url() + "/static/css/style.css"
 
         #use as test input file: http://birdhouse-lsce.extra.cea.fr:8090/wpsoutputs/flyingpigeon/output_txt-0797016c-378e-11e6-91dd-41d8cd554993.txt
         import numpy as np
-<<<<<<< HEAD
-        import pandas as pd
-        #import collections
-=======
+
         #import pandas as pd
-        import collections
->>>>>>> ecc818eb6caabc6f05f12a59797807d1e47f7651
+        #import collections
+
+
         import os
         from os.path import basename
         import requests
