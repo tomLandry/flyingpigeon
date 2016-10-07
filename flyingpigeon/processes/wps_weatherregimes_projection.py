@@ -3,7 +3,6 @@ Processes for Weather Classification
 Author: Nils Hempelmann (nils.hempelmann@lsce.ipsl.fr)
 """
 from flyingpigeon.datafetch import _PRESSUREDATA_
-from flyingpigeon.weatherregimes import _TIMEREGIONS_
 from pywps.Process import WPSProcess
 # from datetime import  date 
 
@@ -16,15 +15,15 @@ class WeatherRegimesRProcess(WPSProcess):
             self,
             identifier = "weatherregimes_projection",
             title = "Weather Regimes -- Projection of Weather Regimes",
-            version = "0.9",
+            version = "0.1",
             metadata=[
-                {"title": "LSCE", "href": "http://www.lsce.ipsl.fr/en/index.php"},
-                {"title": "Documentation", "href": "http://flyingpigeon.readthedocs.io/en/latest/"},
+                {"title":"Weather Regimes -- Projection of Weather Regimes"},
                 ],
             abstract="Weather Regimes detection based on trained reference statistics",
             statusSupported=True,
             storeSupported=True
             )
+
 
         self.resource = self.addComplexInput(
             identifier="resource",
@@ -39,7 +38,7 @@ class WeatherRegimesRProcess(WPSProcess):
         self.Rdat = self.addLiteralInput(
             identifier="Rdat",
             title="R - workspace",
-            abstract="R workspace as output from weather regime reference process",
+            abstract="R workspace as outputed from weatherregieme reference process",
             type=type(''),
             minOccurs=1,
             maxOccurs=1,
@@ -51,7 +50,7 @@ class WeatherRegimesRProcess(WPSProcess):
         self.dat = self.addLiteralInput(
             identifier="dat",
             title="R - datafile",
-            abstract="R datafile as output from weather regime reference process",
+            abstract="R datafile as outputed from weatherregieme reference process",
             type=type(''),
             minOccurs=1,
             maxOccurs=1,
@@ -63,9 +62,9 @@ class WeatherRegimesRProcess(WPSProcess):
         self.netCDF = self.addLiteralInput(
             identifier="netCDF",
             title="netCDF reference",
-            abstract="netCDF file as output from weather regime reference process",
+            abstract="netCDF file as outputed from weatherregieme reference process",
             type=type(''),
-            minOccurs=0,
+            minOccurs=1,
             maxOccurs=1,
             # default=' http://api.gbif.org/v1/occurrence/download/request/0013848-160118175350007.zip'
             # maxmegabites=50,
@@ -102,12 +101,13 @@ class WeatherRegimesRProcess(WPSProcess):
             type=type(''),
             minOccurs=1,
             maxOccurs=1,
-            allowedValues= _TIMEREGIONS_.keys()
+            allowedValues= ['JJA','SON','DJF','MAM','all',
+            'JJAS','DJFM','MAMJ','FMA','SOND', 'SONDJF','MAMJJA']
             )
 
         self.period = self.addLiteralInput(
             identifier="period",
-            title="Period for weather regime calculation",
+            title="Period for weatherregime calculation",
             abstract="Period for analysing the dataset",
             default="19700101-20101231",
             type=type(''),
@@ -117,8 +117,8 @@ class WeatherRegimesRProcess(WPSProcess):
 
         self.anualcycle = self.addLiteralInput(
             identifier="anualcycle",
-            title="Period for annual cycle calculation",
-            abstract="Period for annual cycle calculation",
+            title="Period for anualcycle calculation",
+            abstract="Period for anual cycle calculation",
             default="19700101-19991231",
             type=type(''),
             minOccurs=1,
@@ -129,13 +129,13 @@ class WeatherRegimesRProcess(WPSProcess):
         ### define the outputs
         ######################
 
-        # self.Routput_graphic = self.addComplexOutput(
-        #     identifier="Routput_graphic",
-        #     title="Graphics and Tables",
-        #     abstract="Weather classification pressure map and frequency table",
-        #     formats=[{"mimeType":"image/pdf"}],
-        #     asReference=True,
-        #     )
+        self.Routput_graphic = self.addComplexOutput(
+            identifier="Routput_graphic",
+            title="Weather Classification output",
+            abstract="Weather Classification",
+            formats=[{"mimeType":"image/pdf"}],
+            asReference=True,
+            )
         
         self.output_pca = self.addComplexOutput(
             identifier="output_pca",
@@ -149,22 +149,14 @@ class WeatherRegimesRProcess(WPSProcess):
             identifier="output_classification",
             title="classification",
             abstract="Weather regime classification",
-            formats=[{"mimeType":"application/octet-stream"}],
+            formats=[{"mimeType":"text/plain"}],
             asReference=True,
             )
 
-        self.output_frequency = self.addComplexOutput(
-            identifier="output_frequency",
-            title="Frequency",
-            abstract="Weather regime frequency values per year",
-            formats=[{"mimeType":"text/plain"}],
-            asReference=True,
-            )        
-
         self.output_netcdf = self.addComplexOutput(
             identifier="output_netcdf",
-            title="netCDF file",
-            abstract="Prepared netCDF file as input for weather regime calculation",
+            title="netCDF fiel",
+            abstract="Prepared netCDF file as input for weatherregime calculation",
             formats=[{"mimeType":"application/x-netcdf"}],
             asReference=True,
             )
@@ -179,43 +171,41 @@ class WeatherRegimesRProcess(WPSProcess):
         # reading in the input arguments
         ################################
         try: 
+            logger.info('read in the arguments')
             resource = self.getInputValues(identifier='resource')
             url_Rdat = self.getInputValues(identifier='Rdat')[0]
             url_dat = self.getInputValues(identifier='dat')[0]
-            url_ref_file = self.getInputValues(identifier='netCDF') # can be None
+            url_ref_file = self.getInputValues(identifier='netCDF')[0]
             season = self.getInputValues(identifier='season')[0]
             period = self.getInputValues(identifier='period')[0]            
             anualcycle = self.getInputValues(identifier='anualcycle')[0]
-        except Exception as e: 
-            logger.debug('failed to read in the arguments %s ' % e)
-        
-        try: 
+            
             start = dt.strptime(period.split('-')[0] , '%Y%m%d')
             end = dt.strptime(period.split('-')[1] , '%Y%m%d')
-            # kappa = int(self.getInputValues(identifier='kappa')[0])
+
+            kappa = int(self.getInputValues(identifier='kappa')[0])
             
+            logger.info('bbox %s' % bbox)
             logger.info('period %s' % str(period))
             logger.info('season %s' % str(season))
-            logger.info('read in the arguments')
-            logger.info('url_ref_file: %s' % url_ref_file)
-            logger.info('url_Rdat: %s' % url_Rdat)
-            logger.info('url_dat: %s' % url_dat)
+            
         except Exception as e: 
-            logger.debug('failed to convert arguments %s ' % e)
+            logger.debug('failed to read in the arguments %s ' % e)
            
         ############################
         # fetching trainging data 
         ############################
         
-        from flyingpigeon.utils import download, get_time
+        from flyingpigeon.utils import download
         from os.path import abspath
         
         try:
           dat = abspath(download(url_dat))
           Rdat = abspath(download(url_Rdat))
+          ref_file = download(url_ref_file)
           logger.info('training data fetched')
         except Exception as e:
-          logger.error('failed to fetch training data %s' % e)
+          logger.error('failed to fethch training data %s' % e)
           
         ############################################################    
         ### get the required bbox and time region from resource data
@@ -227,19 +217,10 @@ class WeatherRegimesRProcess(WPSProcess):
         time_range = [start, end]
 
         variable = get_variable(resource)
-
-        if len(url_ref_file) > 0:
-            ref_file = download(url_ref_file[0])  
-            model_subset = call(resource=resource, variable=variable, 
-                time_range=time_range,  # conform_units_to=conform_units_to, geom=bbox, spatial_wrapping='wrap',
-                regrid_destination=ref_file, regrid_options='bil')
-            logger.info('Dataset subset with regridding done: %s ' % model_subset)
-        else:
-            model_subset = call(resource=resource, variable=variable, 
-                time_range=time_range,  # conform_units_to=conform_units_to, geom=bbox, spatial_wrapping='wrap',
-                )
-            logger.info('Dataset time period extracted: %s ' % model_subset)
-            
+        model_subset = call(resource=resource, variable=variable, 
+          time_range=time_range,  # conform_units_to=conform_units_to, geom=bbox, spatial_wrapping='wrap',
+          regrid_destination=ref_file, regrid_options='bil')
+        logger.info('Dataset subset done: %s ' % model_subset)
         
         ##############################################
         ### computing anomalies 
@@ -268,31 +249,23 @@ class WeatherRegimesRProcess(WPSProcess):
           Rsrc = config.Rsrc_dir() 
           Rfile = 'weatherregimes_projection.R'
           
+          infile = model_season  #model_subset #model_ponderate 
+          modelname = 'MODELDATA'
           yr1 = start.year
           yr2 = end.year
-          time = get_time(model_season, format='%Y%m%d')
-
-          #ip, output_graphics = mkstemp(dir=curdir ,suffix='.pdf')
-          ip, file_pca = mkstemp(dir=curdir ,suffix='.txt')
+          ip, output_graphics = mkstemp(dir=curdir ,suffix='.pdf')
+          ip, file_pca = mkstemp(dir=curdir ,suffix='.dat')
           ip, file_class = mkstemp(dir=curdir ,suffix='.Rdat')
-          ip, output_frec = mkstemp(dir=curdir ,suffix='.txt')
                     
           args = ['Rscript', join(Rsrc,Rfile), '%s/' % curdir, 
-                  '%s/' % Rsrc, 
-                  '%s' % model_season, 
-                  '%s' % variable,
-                  '%s' % str(time).strip("[]").replace("'","").replace(" ",""),
-            #      '%s' % output_graphics,
+                  '%s/' % Rsrc, '%s'% infile, '%s' % variable, 
+                  '%s' % output_graphics,
                   '%s' % dat, 
                   '%s' % Rdat, 
                   '%s' % file_pca,
-                  '%s' % file_class, 
-                  '%s' % output_frec,      
-                  '%s' % season, 
-                  '%s' % start.year, 
-                  '%s' % end.year,                  
+                  '%s' % file_class, '%s' % season, 
+                  '%s' % start.year, '%s' % end.year,
                   '%s' % 'MODEL']
-
           logger.info('Rcall builded')
         except Exception as e: 
           msg = 'failed to build the R command %s' % e
@@ -315,9 +288,7 @@ class WeatherRegimesRProcess(WPSProcess):
         ### set the outputs
         ############################################
 
-        #self.Routput_graphic.setValue( output_graphics )
+        self.Routput_graphic.setValue( output_graphics )
         self.output_pca.setValue( file_pca )
         self.output_classification.setValue( file_class )
         self.output_netcdf.setValue( model_season )
-        self.output_frequency.setValue( output_frec )
-        
