@@ -6,6 +6,7 @@ from flyingpigeon.utils import get_time
 import logging
 logger = logging.getLogger(__name__)
 
+<<<<<<< HEAD
 def method_A(resource=[], start=None, end=None, timeslice=20, 
   variable=None, title=None, cmap='seismic' ):
   """returns the result
@@ -17,6 +18,19 @@ def method_A(resource=[], start=None, end=None, timeslice=20,
   :param variable: variable name to be detected in the netCDF file. If not set (not recommended), the variable name will be detected
   :param title: str to be used as title for the signal mal
   :param cmap: define the color scheme for signal map plotting 
+=======
+def worker(resource=[], start=None, end=None, timeslice=20, 
+  variable=None, title=None, cmap='seismic' ):
+  """retuns the result
+  
+  :param resource: list of pathes to netCDF files
+  :param start: beginning of reference period (if None (default), the firs year of consistent ensemble will be detected)
+  :param end: end of comparison period (if None (default), the last year of the consistent ensemble will be detected)
+  :param timeslice: period lenght for mean calculation of reference and comparison period
+  :param variable: variable name to be detected in the netCDF file. If not set (not recommended) the variable name will be detected
+  :param title: str to be used as title for the signal mal
+  :param cmap: define the color sceem for signal map plotting 
+>>>>>>> ce7ce177ccc1ba38fb8c80220bcfd9f379308517
 
   :return: signal.nc, low_agreement_mask.nc, high_agreement_mask.nc, graphic.png, text.txt
   """
@@ -35,7 +49,10 @@ def method_A(resource=[], start=None, end=None, timeslice=20,
     msg = 'failed to sort the input files'
     logger.exception(msg)
     raise Exception(msg)
+<<<<<<< HEAD
   
+=======
+>>>>>>> ce7ce177ccc1ba38fb8c80220bcfd9f379308517
 
   try:
     mergefiles = []
@@ -172,6 +189,7 @@ def method_A(resource=[], start=None, end=None, timeslice=20,
     raise Exception(msg)
   
   try: 
+<<<<<<< HEAD
     if variable == None: 
       variable = get_variable(signal)
     logger.info('variable to be plotted: %s' % variable)
@@ -179,11 +197,22 @@ def method_A(resource=[], start=None, end=None, timeslice=20,
     if title == None: 
       title='Change of %s (difference of mean %s-%s to %s-%s)' % (variable, end1, end2, start1, start2)  
     
+=======
+    
+    if variable == None: 
+      variable = get_variable(signal)
+
+    if title == None: 
+      title='Change of %s (difference of mean %s-%s to %s-%s)' % (variable, end1, end2, start1, start2)  
+    
+    logger.info('variable to be plotted: %s' % variable)
+>>>>>>> ce7ce177ccc1ba38fb8c80220bcfd9f379308517
     graphic = None
     graphic = map_ensembleRobustness(signal, high_agreement_mask, low_agreement_mask, 
               variable=variable, 
               cmap=cmap,
               title = title)
+<<<<<<< HEAD
     
     logger.info('graphic generated')
   except Exception as e:
@@ -192,3 +221,12 @@ def method_A(resource=[], start=None, end=None, timeslice=20,
     raise Exception(msg)
 
   return signal, low_agreement_mask, high_agreement_mask, graphic, text_src # 
+=======
+
+  except Exception as e:
+    print 'graphic generation failed'
+    #msg = 'graphic generation failed'
+    #logger.exception(msg)
+    #raise Exception(msg)
+  return signal, low_agreement_mask, high_agreement_mask, graphic, text_src
+>>>>>>> ce7ce177ccc1ba38fb8c80220bcfd9f379308517
